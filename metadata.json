@@ -1,0 +1,6 @@
+{
+  "name": "GaffersEdge",
+  "description": "A personal English Premier League intelligence web app with live standings, fixtures, team sheets, AI-generated match picks, and Gemini weekly assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
