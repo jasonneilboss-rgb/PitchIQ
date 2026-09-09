@@ -55,34 +55,6 @@ async function requestFootballData<T>(
     return { data: fallbackData, isStale: true };
   }
 
-  // Attempt 1: Try same-origin server proxy (bypasses browser CORS policy)
-  try {
-    const proxyRes = await fetch(`/api/football-data${endpoint}`, {
-      headers: {
-        'X-Auth-Token': apiKey,
-        Accept: 'application/json',
-      },
-    });
-
-    if (proxyRes.status === 429) {
-      console.warn('Rate limited by football-data.org');
-      triggerRateLimitBanner();
-      useAppStore.getState().setIsStaleData(true);
-      useAppStore.getState().setStaleReason('sync_failed');
-      return { data: fallbackData, isStale: true };
-    }
-
-    if (proxyRes.ok) {
-      const data = await proxyRes.json();
-      useAppStore.getState().setIsStaleData(false);
-      useAppStore.getState().setStaleReason(null);
-      return { data, isStale: false };
-    }
-  } catch {
-    // Proxy unavailable (e.g. static GitHub Pages host), fall through to direct call
-  }
-
-  // Attempt 2: Direct browser fetch to football-data.org (for localhost or direct environments)
   try {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       headers: {
