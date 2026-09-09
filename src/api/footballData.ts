@@ -9,8 +9,7 @@ import {
 import { StandingsTable, Match, Scorer, HeadToHead, TeamDetail } from '../types';
 import { CLUB_DATA } from '../constants/clubs';
 
-const API_BASE = 'https://api.football-data.org/v4';
-const PROXY_BASE = '/api/football-data';
+const BASE_URL = 'https://api.football-data.org/v4';
 
 // Rate limit helper: start countdown if 429 received
 let rateLimitTimer: NodeJS.Timeout | null = null;
@@ -30,66 +29,93 @@ function triggerRateLimitBanner() {
   }, 1000);
 }
 
-async function requestFootballData<T>(endpoint: string, fallbackData: T): Promise<{ data: T; isStale: boolean }> {
+async function requestFootballData<T>(
+  endpoint: string,
+  fallbackData: T
+): Promise<{ data: T; isStale: boolean }> {
   const useMock = import.meta.env.VITE_USE_MOCK === 'true';
   const apiKey = import.meta.env.VITE_FOOTBALL_DATA_KEY;
 
+  console.log('PitchIQ API call:', endpoint);
+  console.log('API key present:', !!apiKey);
+  console.log('Mock mode:', useMock);
+
+  // Only use mock if explicitly enabled
   if (useMock) {
+    useAppStore.getState().setIsStaleData(true);
+    useAppStore.getState().setStaleReason('mock_mode');
     return { data: fallbackData, isStale: true };
   }
 
-  // Attempt 1: Try server proxy (bypasses browser CORS & protects key)
+  // If no API key, return fallback with stale flag and log a warning
+  if (!apiKey) {
+    console.warn('VITE_FOOTBALL_DATA_KEY is not set. Showing fallback data.');
+    useAppStore.getState().setIsStaleData(true);
+    useAppStore.getState().setStaleReason('no_key');
+    return { data: fallbackData, isStale: true };
+  }
+
+  // Attempt 1: Try same-origin server proxy (bypasses browser CORS policy)
   try {
-    const proxyRes = await fetch(`${PROXY_BASE}${endpoint}`, {
+    const proxyRes = await fetch(`/api/football-data${endpoint}`, {
       headers: {
+        'X-Auth-Token': apiKey,
         Accept: 'application/json',
       },
     });
 
     if (proxyRes.status === 429) {
+      console.warn('Rate limited by football-data.org');
       triggerRateLimitBanner();
       useAppStore.getState().setIsStaleData(true);
+      useAppStore.getState().setStaleReason('sync_failed');
       return { data: fallbackData, isStale: true };
     }
 
     if (proxyRes.ok) {
       const data = await proxyRes.json();
       useAppStore.getState().setIsStaleData(false);
-      return { data: data as T, isStale: false };
+      useAppStore.getState().setStaleReason(null);
+      return { data, isStale: false };
     }
   } catch {
-    // If proxy not reachable (e.g. static GitHub Pages), proceed to direct API
+    // Proxy unavailable (e.g. static GitHub Pages host), fall through to direct call
   }
 
-  // Attempt 2: Direct browser fetch to football-data.org (if API key provided)
-  if (apiKey) {
-    try {
-      const directRes = await fetch(`${API_BASE}${endpoint}`, {
-        headers: {
-          'X-Auth-Token': apiKey,
-          Accept: 'application/json',
-        },
-      });
+  // Attempt 2: Direct browser fetch to football-data.org (for localhost or direct environments)
+  try {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      headers: {
+        'X-Auth-Token': apiKey,
+      },
+    });
 
-      if (directRes.status === 429) {
-        triggerRateLimitBanner();
-        useAppStore.getState().setIsStaleData(true);
-        return { data: fallbackData, isStale: true };
-      }
-
-      if (directRes.ok) {
-        const data = await directRes.json();
-        useAppStore.getState().setIsStaleData(false);
-        return { data: data as T, isStale: false };
-      }
-    } catch {
-      // CORS or network error
+    if (response.status === 429) {
+      console.warn('Rate limited by football-data.org');
+      triggerRateLimitBanner();
+      useAppStore.getState().setIsStaleData(true);
+      useAppStore.getState().setStaleReason('sync_failed');
+      return { data: fallbackData, isStale: true };
     }
-  }
 
-  // Fallback to high-fidelity seed data
-  useAppStore.getState().setIsStaleData(true);
-  return { data: fallbackData, isStale: true };
+    if (!response.ok) {
+      console.warn(`API error: ${response.status} ${response.statusText}`);
+      useAppStore.getState().setIsStaleData(true);
+      useAppStore.getState().setStaleReason('sync_failed');
+      return { data: fallbackData, isStale: true };
+    }
+
+    const data = await response.json();
+    useAppStore.getState().setIsStaleData(false);
+    useAppStore.getState().setStaleReason(null);
+    return { data, isStale: false };
+
+  } catch (error) {
+    console.warn('Direct fetch to football-data.org failed (browser CORS or network restriction):', error);
+    useAppStore.getState().setIsStaleData(true);
+    useAppStore.getState().setStaleReason('sync_failed');
+    return { data: fallbackData, isStale: true };
+  }
 }
 
 /**

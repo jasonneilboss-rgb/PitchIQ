@@ -19,6 +19,8 @@ interface AppState {
   setRateLimitCountdown: (sec: number | null) => void;
   isStaleData: boolean;
   setIsStaleData: (stale: boolean) => void;
+  staleReason: 'no_key' | 'sync_failed' | 'mock_mode' | null;
+  setStaleReason: (reason: 'no_key' | 'sync_failed' | 'mock_mode' | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -109,9 +111,11 @@ export const useAppStore = create<AppState>()(
       setRateLimitCountdown: (sec) => set({ rateLimitCountdown: sec }),
       isStaleData: false,
       setIsStaleData: (stale) => set({ isStaleData: stale }),
+      staleReason: null,
+      setStaleReason: (reason) => set({ staleReason: reason }),
     }),
     {
-      name: 'gaffersedge_store',
+      name: 'pitchiq_store',
       partialize: (state) => ({
         selectedMatchweek: state.selectedMatchweek,
         recentTeams: state.recentTeams,

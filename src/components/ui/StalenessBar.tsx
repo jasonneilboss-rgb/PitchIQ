@@ -1,5 +1,5 @@
 import React from 'react';
-import { CloudOff, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 
 interface StalenessBarProps {
@@ -9,27 +9,61 @@ interface StalenessBarProps {
 
 export const StalenessBar: React.FC<StalenessBarProps> = ({ onRefresh, isFetching }) => {
   const isStale = useAppStore((s) => s.isStaleData);
+  const staleReason = useAppStore((s) => s.staleReason);
 
+  // If not stale: Hide the banner entirely
   if (!isStale) return null;
 
+  const useMock = import.meta.env.VITE_USE_MOCK === 'true';
+  const apiKey = import.meta.env.VITE_FOOTBALL_DATA_KEY;
+
+  let message = '⚠ Live sync failed — showing cached data · Tap to retry';
+  let isRetryable = true;
+
+  if (useMock || staleReason === 'mock_mode') {
+    message = '⚠ Mock mode active — showing sample data';
+    isRetryable = false;
+  } else if (!apiKey || staleReason === 'no_key') {
+    message = '⚠ API key not configured — showing cached data';
+    isRetryable = false;
+  } else {
+    // If isStale and API key present but request failed:
+    message = '⚠ Live sync failed — showing cached data · Tap to retry';
+    isRetryable = true;
+  }
+
+  const handleTriggerRefresh = () => {
+    if (onRefresh && !isFetching) {
+      onRefresh();
+    }
+  };
+
   return (
-    <div className="bg-[#4A0050]/80 border-b border-[#04F5FF]/20 px-4 py-2 text-xs text-[#B9A9BB] flex items-center justify-between backdrop-blur-sm">
+    <div
+      onClick={isRetryable && onRefresh ? handleTriggerRefresh : undefined}
+      className={`bg-[#4A0050]/90 border-b border-[#E90052]/30 px-4 py-2 text-xs text-[#B9A9BB] flex items-center justify-between backdrop-blur-sm ${
+        isRetryable && onRefresh ? 'cursor-pointer hover:bg-[#4A0050]' : ''
+      }`}
+      role={isRetryable && onRefresh ? 'button' : undefined}
+      tabIndex={isRetryable && onRefresh ? 0 : undefined}
+    >
       <div className="flex items-center gap-2">
-        <CloudOff className="w-3.5 h-3.5 text-[#04F5FF] shrink-0" />
-        <span>
-          <strong className="text-white font-medium">Cached EPL Data:</strong> Showing cached 2026/27 intelligence. Live sync paused or offline.
-        </span>
+        <span className="font-medium text-white/95">{message}</span>
       </div>
-      {onRefresh && (
+      {onRefresh && isRetryable && (
         <button
-          onClick={onRefresh}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleTriggerRefresh();
+          }}
           disabled={isFetching}
-          className="flex items-center gap-1 text-[#04F5FF] hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+          className="flex items-center gap-1.5 text-[#04F5FF] hover:text-white transition-colors cursor-pointer disabled:opacity-50 font-medium"
         >
           <RefreshCw className={`w-3 h-3 ${isFetching ? 'animate-spin' : ''}`} />
-          <span>Refresh</span>
+          <span>Retry</span>
         </button>
       )}
     </div>
   );
 };
+

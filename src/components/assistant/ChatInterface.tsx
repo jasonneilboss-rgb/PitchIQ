@@ -107,7 +107,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </div>
           <div>
             <h3 className="text-sm font-bold text-white uppercase tracking-wide">
-              GaffersEdge Picks Assistant
+              PitchIQ Picks Assistant
             </h3>
             <span className="text-[10px] text-[#00FF85] font-medium flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[#00FF85] animate-pulse" />

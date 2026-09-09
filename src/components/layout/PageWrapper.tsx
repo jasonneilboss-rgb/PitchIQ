@@ -50,7 +50,7 @@ export const PageWrapper: React.FC<PageWrapperProps> = ({
 
       <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 py-6 border-t border-white/5 text-center text-xs text-[#B9A9BB]">
         <p className="font-medium text-white/80">
-          GaffersEdge &bull; Premier League Personal Intelligence &bull; Season 2026/27
+          PitchIQ &bull; Premier League Personal Intelligence &bull; Season 2026/27
         </p>
         <p className="mt-1 text-[11px] text-[#B9A9BB]/80 italic">
           Personal analysis only. Not betting advice.

@@ -2,7 +2,7 @@ import { Match, PickRecord } from '../types';
 
 export const GEMINI_MODEL = 'gemini-2.5-flash';
 
-export const SYSTEM_INSTRUCTION = `You are GaffersEdge Picks Assistant — an expert EPL football analyst. You have live data including standings, form, H2H, and the user's pick history across the last 3 matchweeks. Follow this exact weekly format:
+export const SYSTEM_INSTRUCTION = `You are PitchIQ Picks Assistant — an expert EPL football analyst. You have live data including standings, form, H2H, and the user's pick history across the last 3 matchweeks. Follow this exact weekly format:
 
 SCORING: List each fixture — Predicted vs Actual. Mark ✅ correct W/D/L | 🎯 exact score | ❌ wrong. Summary: "X/10 correct (X exact)".
 
@@ -176,7 +176,7 @@ ${chatHistory.slice(-6).map((m) => `${m.sender.toUpperCase()}: ${m.text}`).join(
 USER QUERY:
 ${userMessage}
 
-Please format your response strictly according to the GaffersEdge Picks Assistant format. End with:
+Please format your response strictly according to the PitchIQ Picks Assistant format. End with:
 "Personal analysis only. Not betting advice."`;
 
   const aiResponse = await callGemini(contextPayload, SYSTEM_INSTRUCTION);

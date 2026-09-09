@@ -24,7 +24,7 @@ async function startServer() {
 
   // Health check
   app.get("/api/health", (_req, res) => {
-    res.json({ status: "ok", app: "GaffersEdge" });
+    res.json({ status: "ok", app: "PitchIQ" });
   });
 
   // Proxy Gemini requests securely
@@ -67,7 +67,11 @@ async function startServer() {
     try {
       const endpoint = req.url.replace(/^\/api\/football-data/, "");
       const targetUrl = `https://api.football-data.org/v4${endpoint}`;
-      const token = process.env.VITE_FOOTBALL_DATA_KEY || process.env.FOOTBALL_DATA_KEY || "";
+      const token =
+        (req.headers["x-auth-token"] as string) ||
+        process.env.VITE_FOOTBALL_DATA_KEY ||
+        process.env.FOOTBALL_DATA_KEY ||
+        "";
 
       const headers: Record<string, string> = {};
       if (token) {
@@ -103,7 +107,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`GaffersEdge server running at http://0.0.0.0:${PORT}`);
+    console.log(`PitchIQ server running at http://0.0.0.0:${PORT}`);
   });
 }
 

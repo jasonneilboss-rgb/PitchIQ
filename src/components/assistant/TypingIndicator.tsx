@@ -7,7 +7,7 @@ export const TypingIndicator: React.FC = () => {
         <span className="text-xs font-black text-[#E90052]">AI</span>
       </div>
       <div className="space-y-1">
-        <p className="text-xs font-semibold text-[#04F5FF]">GaffersEdge Assistant is analyzing...</p>
+        <p className="text-xs font-semibold text-[#04F5FF]">PitchIQ Assistant is analyzing...</p>
         <div className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-[#04F5FF] animate-bounce" style={{ animationDelay: '0ms' }} />
           <span className="w-2 h-2 rounded-full bg-[#04F5FF] animate-bounce" style={{ animationDelay: '150ms' }} />

@@ -27,7 +27,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
       >
         <div className="flex items-center justify-between gap-2 mb-2 pb-1 border-b border-white/10 text-[11px] font-semibold tracking-wider uppercase">
           <span className={isAssistant ? 'text-[#04F5FF]' : 'text-white/90'}>
-            {isAssistant ? 'GaffersEdge AI Picks Assistant' : 'You'}
+            {isAssistant ? 'PitchIQ AI Picks Assistant' : 'You'}
           </span>
           <span className="text-[#B9A9BB] font-mono lowercase">
             {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

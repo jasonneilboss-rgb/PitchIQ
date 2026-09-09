@@ -33,12 +33,12 @@ export const Navbar: React.FC = () => {
         {/* Brand */}
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-[#38003C] border border-[#E90052]/50 flex items-center justify-center shadow-lg shadow-[#E90052]/10">
-            <span className="text-[#E90052] font-black text-lg tracking-tighter">GE</span>
+            <span className="text-[#E90052] font-black text-lg tracking-tighter">PI</span>
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-lg tracking-tight text-white font-sans">
-                Gaffers<span className="text-[#E90052]">Edge</span>
+                Pitch<span className="text-[#E90052]">IQ</span>
               </span>
               <span className="px-1.5 py-0.2 rounded text-[10px] font-bold tracking-widest uppercase bg-[#04F5FF]/15 text-[#04F5FF] border border-[#04F5FF]/30">
                 26/27
