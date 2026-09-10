@@ -8,7 +8,7 @@ dotenv.config();
 
 let aiClient: GoogleGenAI | null = null;
 function getGenAI(): GoogleGenAI | null {
-  const key = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_KEY;
+  const key = process.env.GEMINI_KEY || process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_KEY;
   if (!key) return null;
   if (!aiClient) {
     aiClient = new GoogleGenAI({ apiKey: key });
