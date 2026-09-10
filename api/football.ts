@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const FOOTBALL_DATA_BASE = 'https://api.football-data.org/v4';
-const API_KEY = process.env.VITE_FOOTBALL_DATA_KEY;
+const API_KEY = process.env.FOOTBALL_DATA_KEY;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers so the browser can call this proxy

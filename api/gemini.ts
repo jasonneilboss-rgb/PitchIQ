@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
-const GEMINI_KEY = process.env.VITE_GEMINI_KEY || process.env.GEMINI_API_KEY;
+const GEMINI_KEY = process.env.GEMINI_KEY;
 const MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
