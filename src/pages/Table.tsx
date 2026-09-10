@@ -17,7 +17,7 @@ export const Table: React.FC = () => {
   const [viewFilter, setViewFilter] = useState<'TOTAL' | 'HOME' | 'AWAY'>('TOTAL');
 
   // Table rows based on filter
-  const standings = standingsData?.standings || [];
+  const standings = standingsData?.allStandings || standingsData?.standings || [];
   const selectedStandings = standings.find((s) => s.type === viewFilter) || standings[0];
   const tableRows = selectedStandings?.table || [];
   const topScorers = scorersData?.scorers || [];

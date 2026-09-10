@@ -74,7 +74,13 @@ async function requestFootballData<T>(
 /**
  * Fetch Standings for PL
  */
-export async function fetchStandings(): Promise<{ standings: StandingsTable[]; season: any; currentMatchday: number; isStale: boolean }> {
+export async function fetchStandings(): Promise<{
+  standings: StandingsTable[];
+  allStandings: StandingsTable[];
+  season: any;
+  currentMatchday: number;
+  isStale: boolean;
+}> {
   console.log('fetchStandings called');
 
   const fallback = {
@@ -88,8 +94,15 @@ export async function fetchStandings(): Promise<{ standings: StandingsTable[]; s
   console.log('fetchStandings result - isStale:', res.isStale);
   console.log('fetchStandings result - data:', res.data);
 
+  const standingsArray = res.data.standings || [];
+
+  // football-data.org returns [{type: 'TOTAL', table: [...]}, {type: 'HOME',...}, {type: 'AWAY',...}]
+  const totalStandings = standingsArray.find((s: any) => s.type === 'TOTAL') 
+    || standingsArray[0];
+
   return {
-    standings: res.data.standings || MOCK_STANDINGS,
+    standings: totalStandings ? [totalStandings] : MOCK_STANDINGS,
+    allStandings: standingsArray,  // keep all three for the toggle
     season: res.data.season,
     currentMatchday: res.data.season?.currentMatchday || CURRENT_MATCHWEEK,
     isStale: res.isStale,
