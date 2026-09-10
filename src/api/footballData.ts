@@ -75,6 +75,8 @@ async function requestFootballData<T>(
  * Fetch Standings for PL
  */
 export async function fetchStandings(): Promise<{ standings: StandingsTable[]; season: any; currentMatchday: number; isStale: boolean }> {
+  console.log('fetchStandings called');
+
   const fallback = {
     standings: MOCK_STANDINGS,
     season: { id: 2026, currentMatchday: CURRENT_MATCHWEEK },
@@ -83,9 +85,12 @@ export async function fetchStandings(): Promise<{ standings: StandingsTable[]; s
 
   const res = await requestFootballData<{ standings: StandingsTable[]; season: any }>('/competitions/PL/standings', fallback);
 
+  console.log('fetchStandings result - isStale:', res.isStale);
+  console.log('fetchStandings result - data:', res.data);
+
   return {
     standings: res.data.standings || MOCK_STANDINGS,
-    season: res.data.season || { currentMatchday: CURRENT_MATCHWEEK },
+    season: res.data.season,
     currentMatchday: res.data.season?.currentMatchday || CURRENT_MATCHWEEK,
     isStale: res.isStale,
   };
