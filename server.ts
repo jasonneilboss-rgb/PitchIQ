@@ -37,28 +37,81 @@ async function startServer() {
         });
       }
 
-      const { prompt, systemInstruction } = req.body;
-      if (!prompt) {
+      let promptText = req.body.prompt;
+      if (!promptText && req.body.contents?.[0]?.parts?.[0]?.text) {
+        promptText = req.body.contents[0].parts[0].text;
+      }
+      if (!promptText) {
         return res.status(400).json({ error: "Missing prompt" });
       }
 
+      let sysInst = req.body.systemInstruction;
+      if (typeof sysInst === 'object' && sysInst?.parts?.[0]?.text) {
+        sysInst = sysInst.parts[0].text;
+      }
+
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: systemInstruction
+        model: "gemini-3.6-flash",
+        contents: promptText,
+        config: sysInst
           ? {
-              systemInstruction: systemInstruction,
+              systemInstruction: sysInst,
             }
           : undefined,
       });
 
       const text = response.text || "";
-      res.json({ text });
+      res.json({
+        text,
+        candidates: [
+          {
+            content: {
+              parts: [{ text }],
+            },
+          },
+        ],
+      });
     } catch (err: any) {
       console.error("Server Gemini API error:", err);
       res.status(500).json({
         error: err.message || "Failed to generate AI response",
       });
+    }
+  });
+
+  // Vercel serverless proxy route compatibility for /api/football?path=...
+  app.get("/api/football", async (req, res) => {
+    try {
+      const path = req.query.path as string;
+      if (!path) {
+        return res.status(400).json({ error: "Missing path query parameter" });
+      }
+      const token = process.env.VITE_FOOTBALL_DATA_KEY || process.env.FOOTBALL_DATA_KEY || "";
+      const queryParams = { ...req.query };
+      delete queryParams.path;
+      const queryString = new URLSearchParams(queryParams as Record<string, string>).toString();
+      const targetUrl = `https://api.football-data.org/v4${path}${queryString ? '?' + queryString : ''}`;
+
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["X-Auth-Token"] = token;
+      }
+
+      const response = await fetch(targetUrl, {
+        method: req.method,
+        headers,
+      });
+
+      if (response.status === 429) {
+        res.setHeader("Retry-After", "60");
+        return res.status(429).json({ error: "Rate limited" });
+      }
+
+      const data = await response.json().catch(() => ({}));
+      res.status(response.status).json(data);
+    } catch (err: any) {
+      console.error("Football proxy error:", err);
+      res.status(502).json({ error: "Upstream football-data proxy error", details: err.message });
     }
   });
 

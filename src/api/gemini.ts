@@ -19,49 +19,33 @@ interface GeminiApiContent {
 }
 
 /**
- * Executes a Gemini request via backend proxy (if available) or direct REST API
+ * Executes a Gemini request via /api/gemini serverless proxy
  */
 async function callGemini(prompt: string, customSystemInstruction: string = SYSTEM_INSTRUCTION): Promise<string> {
-  // 1. Try server-side proxy
+  const requestBody = {
+    contents: [{ parts: [{ text: prompt }] }],
+    systemInstruction: {
+      parts: [{ text: customSystemInstruction }],
+    },
+    prompt,
+  };
+
   try {
-    const proxyRes = await fetch('/api/gemini', {
+    const response = await fetch('/api/gemini', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, systemInstruction: customSystemInstruction }),
+      body: JSON.stringify(requestBody),
     });
 
-    if (proxyRes.ok) {
-      const data = await proxyRes.json();
-      if (data.text) return data.text;
+    if (response.ok) {
+      const data = await response.json();
+      const text = data.text || data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) return text;
+    } else {
+      console.warn(`Gemini proxy returned status ${response.status}`);
     }
-  } catch {
-    // Server proxy not available (e.g. GitHub Pages static deploy)
-  }
-
-  // 2. Try direct client-side call with VITE_GEMINI_KEY
-  const apiKey = import.meta.env.VITE_GEMINI_KEY;
-  if (apiKey) {
-    try {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          systemInstruction: {
-            parts: [{ text: customSystemInstruction }],
-          },
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) return text;
-      }
-    } catch {
-      // Fallback
-    }
+  } catch (error) {
+    console.warn('Gemini proxy call failed:', error);
   }
 
   return '';

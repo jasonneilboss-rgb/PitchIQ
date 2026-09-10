@@ -9,7 +9,8 @@ import {
 import { StandingsTable, Match, Scorer, HeadToHead, TeamDetail } from '../types';
 import { CLUB_DATA } from '../constants/clubs';
 
-const BASE_URL = 'https://api.football-data.org/v4';
+// No API key needed in the browser — proxy handles it server-side
+const PROXY_BASE = '/api/football';
 
 // Rate limit helper: start countdown if 429 received
 let rateLimitTimer: NodeJS.Timeout | null = null;
@@ -33,37 +34,17 @@ async function requestFootballData<T>(
   endpoint: string,
   fallbackData: T
 ): Promise<{ data: T; isStale: boolean }> {
-  const useMock = import.meta.env.VITE_USE_MOCK === 'true';
-  const apiKey = import.meta.env.VITE_FOOTBALL_DATA_KEY;
 
-  console.log('PitchIQ API call:', endpoint);
-  console.log('API key present:', !!apiKey);
-  console.log('Mock mode:', useMock);
-
-  // Only use mock if explicitly enabled
-  if (useMock) {
-    useAppStore.getState().setIsStaleData(true);
-    useAppStore.getState().setStaleReason('mock_mode');
-    return { data: fallbackData, isStale: true };
-  }
-
-  // If no API key, return fallback with stale flag and log a warning
-  if (!apiKey) {
-    console.warn('VITE_FOOTBALL_DATA_KEY is not set. Showing fallback data.');
-    useAppStore.getState().setIsStaleData(true);
-    useAppStore.getState().setStaleReason('no_key');
-    return { data: fallbackData, isStale: true };
-  }
+  console.log('PitchIQ API call via proxy:', endpoint);
 
   try {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      headers: {
-        'X-Auth-Token': apiKey,
-      },
-    });
+    // Call our Vercel proxy with the endpoint as a query param
+    const proxyUrl = `${PROXY_BASE}?path=${encodeURIComponent(endpoint)}`;
+    
+    const response = await fetch(proxyUrl);
 
     if (response.status === 429) {
-      console.warn('Rate limited by football-data.org');
+      console.warn('Rate limited');
       triggerRateLimitBanner();
       useAppStore.getState().setIsStaleData(true);
       useAppStore.getState().setStaleReason('sync_failed');
@@ -71,7 +52,7 @@ async function requestFootballData<T>(
     }
 
     if (!response.ok) {
-      console.warn(`API error: ${response.status} ${response.statusText}`);
+      console.warn(`Proxy error: ${response.status}`);
       useAppStore.getState().setIsStaleData(true);
       useAppStore.getState().setStaleReason('sync_failed');
       return { data: fallbackData, isStale: true };
@@ -83,7 +64,7 @@ async function requestFootballData<T>(
     return { data, isStale: false };
 
   } catch (error) {
-    console.warn('Direct fetch to football-data.org failed (browser CORS or network restriction):', error);
+    console.warn('Proxy call failed:', error);
     useAppStore.getState().setIsStaleData(true);
     useAppStore.getState().setStaleReason('sync_failed');
     return { data: fallbackData, isStale: true };

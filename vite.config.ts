@@ -30,7 +30,7 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, '.'),
       },
     },
-    base: '/PitchIQ/',
+    // No base needed for Vercel — served from root
     build: {
       outDir: 'dist',
     },
